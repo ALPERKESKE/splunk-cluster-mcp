@@ -1,8 +1,23 @@
 # splunk-cluster-mcp
 
-> A **cluster-aware** Model Context Protocol gateway for distributed Splunk deployments. Lets Claude (or any MCP client) talk to a multi-node Splunk cluster through one endpoint, routing each tool call to the right node (cluster manager, search head cluster captain, license manager, indexers, …).
+> A small MCP that makes Claude a bit easier to use against a distributed Splunk cluster. Point it at the cluster manager and it discovers the rest — indexer peers, search head cluster captain, license manager — then routes each tool to the right node.
 
-**Built because**: Splunk's official MCP server (1.1.2, May 2026) is single-instance. In a real cluster, search runs on a search head, cluster admin runs on the cluster manager, license operations live on the license manager. No existing MCP knew about that.
+**Built because**: Splunk's official MCP is single-instance. In a multi-node cluster, some things live on the cluster manager, some on a search head, some on the license manager. I wanted Claude to figure that out instead of me telling it for every call.
+
+---
+
+## What this is — and isn't
+
+A small quality-of-life layer for cluster setups. It:
+
+- **Doesn't** add any new Splunk capability — everything here is already in Splunk's REST API
+- **Doesn't** replace Splunk's official MCP — the two are complementary
+- **Doesn't** ship enterprise auth — Phase 1 uses HTTP basic auth with a shared admin
+- **Does** save you from juggling 8 SSH sessions to read cluster-wide state
+- **Does** keep working when your SHC captain changes (re-discovers on every refresh)
+- **Does** fan out to all peers in parallel for cluster-wide queries (disks, indexes)
+
+If you run a single Splunk instance, just use Splunk's official MCP — it has more depth (knowledge objects, AI helpers). This project earns its keep only when you have a distributed cluster.
 
 ---
 
@@ -161,17 +176,18 @@ Once connected, try:
 
 ---
 
-## Why not just use the official Splunk MCP server?
+## How this relates to Splunk's official MCP
 
-The [official MCP](https://splunkbase.splunk.com/app/7931) ([Cisco DevNet repo](https://github.com/CiscoDevNet/Splunk-MCP-Server-official)) is excellent for **single-instance** data exploration: SPL, saved searches, knowledge objects, AI helpers. But:
+The [official Splunk MCP](https://splunkbase.splunk.com/app/7931) ([Cisco DevNet repo](https://github.com/CiscoDevNet/Splunk-MCP-Server-official)) is the right choice for single-instance data exploration — SPL, saved searches, knowledge objects, AI helpers. It runs **inside one Splunk instance** as an app, so it sees that one instance's view of the world.
 
-- It runs **inside one Splunk instance** as an app — installed on a single host
-- No tools for cluster manager admin (peers, bundles, fixups)
-- No SHC captain awareness
-- No license manager routing
-- No multi-node fan-out (disks, logs, indexes across the cluster)
+This project picks up where the official MCP stops:
 
-This project is **complementary**: it focuses on cluster orchestration. A future version may **compose** the official MCP (`splunk_run_query` delegated to it) so both layers coexist under one Claude-facing namespace.
+- Discovers an indexer cluster from the cluster manager
+- Re-discovers the SHC captain dynamically (captain changes on election)
+- Auto-routes to the license manager via the CM's config
+- Fans out across nodes in parallel for cluster-wide reads (disks, logs, indexes)
+
+The two are complementary, not competing. A future version may **compose** the official MCP — delegating `splunk_run_query` and the AI helpers to it — so both layers coexist under one Claude-facing namespace.
 
 ---
 
