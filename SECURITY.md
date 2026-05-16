@@ -89,6 +89,26 @@ Phase 1 uses a single set of credentials across all cluster nodes. There is
 no per-role separation between, say, "cluster admin" and "search". Phase 2
 roadmap includes per-role tokens.
 
+### Token portability across the cluster
+
+Splunk tokens are signed with the issuing node's `splunk.secret` **and**
+recorded in that node's local KVStore. They are only portable across nodes
+that share both — i.e. a Search Head Cluster, where members replicate
+KVStore. They are **not** portable between the cluster manager, indexer
+peers, and the license manager, even when `splunk.secret` is identical
+across them. We verified this in our lab: with `splunk.secret` synced to
+all 12 nodes, a CM-issued token still failed on other nodes with
+`Token signature was valid, but could not find token in App KVStore`.
+
+Practical implication for this MCP:
+
+- **Cluster-wide single credential:** use HTTP basic auth with a shared
+  least-privilege role. This is what Phase 1 supports cleanly.
+- **Single-instance or SHC-only:** a bearer token works and is the
+  preferred mode.
+- Per-node token issuance (one token per role, stored in memory) is on the
+  Phase 2 roadmap.
+
 ## Reporting an issue
 
 Open a GitHub issue at https://github.com/ALPERKESKE/splunk-cluster-mcp/issues

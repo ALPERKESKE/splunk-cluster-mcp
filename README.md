@@ -95,6 +95,19 @@ Settings → Tokens → New Token (or `POST /services/authorization/tokens`).
 HTTP basic auth (username + password) is the fallback. **Use a least-privilege
 role for the token / user — not full admin.** See [`SECURITY.md`](./SECURITY.md).
 
+> **Note on tokens in a distributed cluster.** A Splunk token is signed with
+> the issuing node's `splunk.secret` *and* recorded in that node's local
+> KVStore. Tokens are only portable across nodes that share **both**: the same
+> `splunk.secret` and the same KVStore. In practice that's a Search Head
+> Cluster (members share KVStore) — not the indexer cluster or the license
+> manager. We confirmed this in our lab: even after syncing `splunk.secret` to
+> all 12 nodes, a token issued on the CM was rejected on other nodes with
+> `Token signature was valid, but could not find token in App KVStore`. So for
+> a cluster-wide single credential today, **HTTP basic auth with a shared
+> least-privilege role is the simplest path**. Tokens are still the right
+> choice for single-instance or SHC-only deployments. Per-node token
+> management is on the Phase 2 roadmap.
+
 **1. Environment variables** (good for CI / headless):
 
 ```bash
@@ -217,6 +230,9 @@ See [`SECURITY.md`](./SECURITY.md) for the full security model. Quick highlights
 ## Limitations
 
 - Phase 1 uses a single auth context across the cluster. Per-role split is Phase 2.
+- A single bearer token does not work cluster-wide (tokens are per-node in
+  KVStore — see [Credentials](#credentials--three-options)). For cluster-wide
+  use, prefer basic auth with a shared least-privilege role.
 - No persistent topology cache between MCP sessions — re-discovers on each start.
 
 ## Roadmap
