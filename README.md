@@ -12,8 +12,8 @@ A small quality-of-life layer for cluster setups. It:
 
 - **Doesn't** add any new Splunk capability — everything here is already in Splunk's REST API
 - **Doesn't** replace Splunk's official MCP — the two are complementary
-- **Doesn't** ship enterprise auth — Phase 1 uses a single shared credential (basic auth with a least-privilege role, or a bearer token for single-instance / SHC)
-- **Does** save you from juggling 8 SSH sessions to read cluster-wide state
+- **Doesn't** ship enterprise auth — uses a single shared credential (basic auth with a least-privilege role, or a bearer token for single-instance / SHC)
+- **Does** save you from juggling a dozen SSH sessions to read cluster-wide state
 - **Does** keep working when your SHC captain changes (re-discovers on every refresh)
 - **Does** fan out to all peers in parallel for cluster-wide queries (disks, indexes)
 
@@ -30,7 +30,7 @@ The fastest way. Inside any Claude Code session:
 /plugin install splunk-cluster-mcp@splunk-cluster-mcp
 ```
 
-Claude Code clones the repo into `~/.claude/plugins/cache` and registers the MCP automatically. Restart Claude Code; the gateway is ready in every session.
+Claude Code clones the repo into `~/.claude/plugins/cache` and registers the MCP automatically. Restart Claude Code if it doesn't pick the plugin up on its own.
 
 First-run: ask Claude to connect to your cluster.
 
@@ -115,7 +115,7 @@ Or add to `.mcp.json` manually:
 > a cluster-wide single credential today, **HTTP basic auth with a shared
 > least-privilege role is the simplest path**. Tokens are still the right
 > choice for single-instance or SHC-only deployments. Per-node token
-> management is on the Phase 2 roadmap.
+> management isn't supported yet.
 
 **1. Environment variables** (good for CI / headless):
 
@@ -163,7 +163,7 @@ Once connected, try:
 - _“What indexes have the most data?”_ → `list_indexes`
 - _“Tail the last 50 ERROR lines from splunkd.log on idx2.”_ → `tail_log(node="idx2", grep="ERROR")`
 - _“Per-node disk usage. Which partition is hottest?”_ → `node_disk`
-- _“Run SPL: index=_internal sourcetype=splunkd ERROR \| stats count by component.”_ → `search`
+- _"Run SPL:"_ `index=_internal sourcetype=splunkd ERROR | stats count by component` → `search`
 - _“Show me the last 10 license violation messages.”_ → `license_status`
 - _“List users and their roles. Include capabilities and allowed indexes.”_ → `list_users(detailed=true)`
 
@@ -238,18 +238,22 @@ See [`SECURITY.md`](./SECURITY.md) for the full security model. Quick highlights
 
 ## Limitations
 
-- Phase 1 uses a single auth context across the cluster. Per-role split is Phase 2.
+- Uses a single auth context across the cluster — no per-role split.
 - A single bearer token does not work cluster-wide (tokens are per-node in
   KVStore — see [Credentials](#credentials--three-options)). For cluster-wide
   use, prefer basic auth with a shared least-privilege role.
 - No persistent topology cache between MCP sessions — re-discovers on each start.
+- Read-only by design — no write tools (no bundle pushes, no node restarts).
 
-## Roadmap
+## Ideas for later
 
-- **Phase 2**: federation with Splunk's official MCP server (compose `splunk_run_query` and other official tools under a single namespace)
-- **Phase 2**: OAuth 2.1 per-role tokens (RBAC)
-- **Phase 2**: optional OS-keyring credential storage
-- **Phase 2**: write tools (push bundle, restart node, set retention) once auth is RBAC-safe
+No promises on any of these — just directions the project could go
+if it earns the attention:
+
+- Federation with Splunk's official MCP server (compose `splunk_run_query` and other official tools under a single namespace)
+- Per-role tokens / RBAC-aware credential handling
+- Optional OS-keyring credential storage
+- Write tools (push bundle, restart node, set retention) — only after the auth model can scope them safely
 
 ## License
 
