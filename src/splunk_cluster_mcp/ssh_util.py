@@ -1,4 +1,4 @@
-"""SSH subprocess helpers — used by tools that need shell on a node (tail_log, scenario rollback)."""
+"""SSH subprocess helpers — used by tools that need shell on a node (e.g. tail_log)."""
 from __future__ import annotations
 
 import asyncio

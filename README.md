@@ -56,22 +56,19 @@ Or add to `.mcp.json` manually:
 
 ## Tool catalog
 
-| Tool | Routes to | Read/Write |
+| Tool | Routes to | Notes |
 |---|---|---|
-| `cluster_connect` | — | runtime setup |
-| `cluster_connection_status` | — | diagnostic |
-| `cluster_health` | Cluster Manager | read |
-| `list_peers` | Cluster Manager | read |
-| `shc_status` | SHC Captain (or any member) | read |
-| `list_indexes` | Cluster Manager | read |
-| `index_detail` | Cluster Manager | read |
-| `node_disk` | All nodes (fan-out) | read |
-| `tail_log` | Any node (SSH) | read |
-| `license_status` | License Manager | read |
-| `search` | SHC Captain (dynamic) | read |
-| `scenario_license_violation` | License Manager (SSH+CLI) | **WRITE** |
-| `scenario_license_violation_recover` | License Manager (SSH+CLI) | **WRITE** |
-| `scenario_recover_baseline` | Proxmox host (qm rollback) | **WRITE (destructive)** |
+| `cluster_connect` | — | runtime credential setup (in-memory only) |
+| `cluster_connection_status` | — | diagnostic — are we connected, where to |
+| `cluster_health` | Cluster Manager | peers up/searchable, bundle, fixups |
+| `list_peers` | Cluster Manager | indexer cluster peer detail |
+| `shc_status` | SHC Captain (or any member) | members, captain, sync state |
+| `list_indexes` | Cluster Manager | cluster-wide index list with bucket health |
+| `index_detail` | Cluster Manager | deep info on a single index |
+| `node_disk` | All nodes (fan-out) | partition usage per node, hottest partition |
+| `tail_log` | Any node (SSH) | tail splunkd, license_usage, metrics, … |
+| `license_status` | License Manager | stacks, pools, violations |
+| `search` | SHC Captain (dynamic) | SPL via async job, cluster-wide |
 
 ---
 
@@ -121,8 +118,7 @@ Once connected, try:
 - _“Tail the last 50 ERROR lines from splunkd.log on idx2.”_ → `tail_log(node="idx2", grep="ERROR")`
 - _“Per-node disk usage. Which partition is hottest?”_ → `node_disk`
 - _“Run SPL: index=_internal sourcetype=splunkd ERROR \| stats count by component.”_ → `search`
-- _“Trigger a license violation scenario then show me the effects.”_ → `scenario_license_violation` + `license_status`
-- _“Roll the cluster back to the baseline snapshot.”_ → `scenario_recover_baseline`
+- _“Show me the last 10 license violation messages.”_ → `license_status`
 
 ---
 
@@ -155,7 +151,6 @@ Once connected, try:
 | License pool / quota / violations | License Manager (auto-discovered from CM) |
 | Per-node disk / partition usage | Each node directly (parallel fan-out) |
 | Log tail | Named node via SSH |
-| Scenarios (write) | License Manager via SSH+CLI, or Proxmox host |
 
 **Topology discovery** at `cluster_connect` time:
 1. CM → indexer peers, license manager URL
@@ -187,16 +182,15 @@ This project is **complementary**: it focuses on cluster orchestration. A future
 ## Limitations
 
 - Phase 1 uses HTTP basic auth (shared admin). Per-role tokens are Phase 2.
-- Scenario tools depend on lab-specific assumptions (SSH alias `lm1`, Proxmox host alias `proxmox`, VMID range 9030-9041). Generalize before using on a different cluster.
 - No persistent topology cache between MCP sessions — re-discovers on each start.
 - `verify_ssl=false` is default for lab convenience. Set `true` in prod.
 
 ## Roadmap
 
 - **Phase 2**: federation with Splunk's official MCP server (compose `splunk_run_query` and other official tools under a single namespace)
-- **Phase 2**: more scenario triggers (forwarder queue blocking, search head load, indexer disk full)
 - **Phase 2**: OAuth 2.1 per-role tokens (RBAC)
 - **Phase 2**: optional OS-keyring credential storage
+- **Phase 2**: write tools (push bundle, restart node, set retention) once auth is RBAC-safe
 
 ## License
 

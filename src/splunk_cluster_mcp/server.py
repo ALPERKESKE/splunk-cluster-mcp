@@ -27,7 +27,6 @@ from .tools import disk as disk_tools
 from .tools import indexes as indexes_tools
 from .tools import license as license_tools
 from .tools import logs as logs_tools
-from .tools import scenario as scenario_tools
 from .tools import search as search_tools
 from .tools import shc as shc_tools
 
@@ -251,67 +250,6 @@ def build_app() -> FastMCP:
     ) -> dict:
         try:
             return await logs_tools.tail_log(gw, node=node, log_name=log_name, lines=lines, grep=grep)
-        except NotConnectedError as e:
-            return _err(e)
-
-    # ---- Scenario triggers (WRITE) ------------------------------------
-
-    @mcp.tool(
-        name="scenario_license_violation",
-        description=(
-            "WRITE. Trigger a license violation scenario by lowering the daily quota of a "
-            "license pool. Saves the original quota to disk so it can be restored. Use "
-            "target_quota_mb to set how low (default 5 MB — easy to exceed). Pool name "
-            "defaults to 'auto_generated_pool_enterprise'. After triggering, ingest just "
-            "a few MB of data to provoke violations. Call scenario_license_violation_recover "
-            "to undo. Requires cluster_connect."
-        ),
-    )
-    async def scenario_license_violation(
-        target_quota_mb: int = 5,
-        pool_name: str = "auto_generated_pool_enterprise",
-    ) -> dict:
-        try:
-            return await scenario_tools.scenario_license_violation(
-                gw, target_quota_mb=target_quota_mb, pool_name=pool_name,
-            )
-        except NotConnectedError as e:
-            return _err(e)
-
-    @mcp.tool(
-        name="scenario_license_violation_recover",
-        description=(
-            "WRITE. Restore the original license pool quota that scenario_license_violation "
-            "modified. Reads pre-state from disk. Idempotent — safe to call multiple times. "
-            "Requires cluster_connect."
-        ),
-    )
-    async def scenario_license_violation_recover() -> dict:
-        try:
-            return await scenario_tools.scenario_license_violation_recover(gw)
-        except NotConnectedError as e:
-            return _err(e)
-
-    @mcp.tool(
-        name="scenario_recover_baseline",
-        description=(
-            "WRITE. DESTRUCTIVE. Roll back cluster VMs to a Proxmox snapshot (default "
-            "'pre-socready-baseline'). target='all' rolls back every cluster VM; or pass a "
-            "node label like 'sf-student01-idx2' or a comma-separated list. Takes ~30-60s "
-            "per VM. Splunk restarts fresh, all in-memory state lost. Use this as the "
-            "ultimate reset after a destructive scenario. Requires SSH alias 'proxmox' "
-            "configured. Requires cluster_connect."
-        ),
-    )
-    async def scenario_recover_baseline(
-        target: str = "all",
-        snapshot_name: str = "pre-socready-baseline",
-        proxmox_host: str = "proxmox",
-    ) -> dict:
-        try:
-            return await scenario_tools.scenario_recover_baseline(
-                gw, target=target, snapshot_name=snapshot_name, proxmox_host=proxmox_host,
-            )
         except NotConnectedError as e:
             return _err(e)
 
