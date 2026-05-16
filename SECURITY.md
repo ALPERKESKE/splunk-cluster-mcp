@@ -6,20 +6,24 @@ the deployment.
 
 ## Threat model in one paragraph
 
-The MCP holds Splunk credentials (token or admin password) **in memory** and uses
-them to call Splunk's management port (8089). It does not modify any Splunk-side
-configuration. It does not install anything inside Splunk. Tool outputs flow back
-through the MCP to Claude (and therefore to Anthropic's API).
+The MCP holds Splunk credentials (token, or username + password for a
+least-privilege Splunk role) **in memory** and uses them to call Splunk's
+management port (8089). It does not modify any Splunk-side configuration. It
+does not install anything inside Splunk. Tool outputs flow back through the
+MCP to Claude (and therefore to Anthropic's API).
 
 ## What we get right
 
 - **Credentials in memory only** — the `cluster_connect` path never writes
   tokens or passwords to disk.
-- **Token-first auth** — Bearer token auth is preferred over basic auth.
-  Tokens can be scoped per-role and revoked individually.
+- **Two auth modes, choose by topology** — basic auth (username + password)
+  for a shared least-privilege role works cluster-wide; bearer tokens are
+  preferred for single-instance or SHC-only deployments because they can be
+  scoped per-role and revoked individually. See "Token portability across
+  the cluster" below.
 - **TLS verification on by default** — `SPLUNK_VERIFY_SSL=true` is the
   default. Set to `false` only on trusted lab networks with self-signed certs.
-- **No credentials in logs** — admin password and bearer tokens are not
+- **No credentials in logs** — passwords and bearer tokens are not
   echoed to log output.
 - **Shell-injection prevention** — SSH-backed tools use `shlex.quote` for any
   user-provided string interpolated into a remote command.
@@ -40,7 +44,8 @@ Suggested role (`mcp-readonly`):
 - Inherits `user`
 - `srchIndexesAllowed` = `*` (or only the indexes you want exposed)
 - No `can_delete`, no `edit_*` capabilities
-- Recommend a token scoped to this role rather than a password.
+- For single-instance / SHC use, prefer a token scoped to this role; for
+  cluster-wide use, basic auth as this role (see token-portability note).
 
 ### TLS
 
@@ -83,7 +88,7 @@ clones the repository and runs its code. You are trusting:
 Pinning a specific commit SHA (the marketplace.json `source` accepts a
 `sha` field) protects against later commits.
 
-### Shared admin in Phase 1
+### Shared credential in Phase 1
 
 Phase 1 uses a single set of credentials across all cluster nodes. There is
 no per-role separation between, say, "cluster admin" and "search". Phase 2

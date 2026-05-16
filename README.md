@@ -12,7 +12,7 @@ A small quality-of-life layer for cluster setups. It:
 
 - **Doesn't** add any new Splunk capability — everything here is already in Splunk's REST API
 - **Doesn't** replace Splunk's official MCP — the two are complementary
-- **Doesn't** ship enterprise auth — Phase 1 uses HTTP basic auth with a shared admin
+- **Doesn't** ship enterprise auth — Phase 1 uses a single shared credential (basic auth with a least-privilege role, or a bearer token for single-instance / SHC)
 - **Does** save you from juggling 8 SSH sessions to read cluster-wide state
 - **Does** keep working when your SHC captain changes (re-discovers on every refresh)
 - **Does** fan out to all peers in parallel for cluster-wide queries (disks, indexes)
@@ -36,7 +36,7 @@ First-run: ask Claude to connect to your cluster.
 
 ```
 Connect to my Splunk cluster — CM is https://cm.example.com:8089,
-SHC bootstrap is https://sh1.example.com:8089, admin/<password>.
+SHC bootstrap is https://sh1.example.com:8089, user mcp-readonly / <password>.
 ```
 
 Claude calls `cluster_connect(...)` and the rest of the tools become live.
@@ -90,10 +90,19 @@ Or add to `.mcp.json` manually:
 
 ## Credentials — three options
 
-**Auth modes:** Bearer token is preferred. Create a token in Splunk via
-Settings → Tokens → New Token (or `POST /services/authorization/tokens`).
-HTTP basic auth (username + password) is the fallback. **Use a least-privilege
-role for the token / user — not full admin.** See [`SECURITY.md`](./SECURITY.md).
+**Auth modes:** Two supported — pick based on topology.
+
+- **HTTP basic auth (recommended for a distributed cluster).** Username +
+  password for a shared least-privilege Splunk role. Works against every
+  node in the cluster.
+- **Bearer token (recommended for single-instance or SHC-only).** Create one
+  in Splunk via Settings → Tokens → New Token (or
+  `POST /services/authorization/tokens`). Tokens can be scoped per-role and
+  revoked individually, but they are not portable across the indexer cluster
+  or license manager — see the note below.
+
+**Use a least-privilege role for the user / token — not full admin.** See
+[`SECURITY.md`](./SECURITY.md).
 
 > **Note on tokens in a distributed cluster.** A Splunk token is signed with
 > the issuing node's `splunk.secret` *and* recorded in that node's local
@@ -222,8 +231,7 @@ The two are complementary, not competing. A future version may **compose** the o
 
 See [`SECURITY.md`](./SECURITY.md) for the full security model. Quick highlights:
 
-- **Use a token, not a password.** Splunk Settings → Tokens → New Token.
-- **Use a least-privilege role.** `admin` lets Claude run `| delete` if steered to.
+- **Use a least-privilege role, not `admin`.** `admin` lets Claude run `| delete` if steered to. Whether you authenticate by password or bearer token, scope the role to read-only on the indexes you want exposed.
 - **Keep `verify_ssl=true`** (the default). `false` is for trusted lab networks only.
 - **Credentials are in-memory only** — `cluster_connect` never writes them to disk.
 - **Tool outputs flow to Anthropic's API** via Claude — review what your indexes contain.
