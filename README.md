@@ -113,10 +113,11 @@ role for the token / user — not full admin.** See [`SECURITY.md`](./SECURITY.m
 ```bash
 export SPLUNK_BOOTSTRAP_URL=https://cm.example.com:8089
 export SPLUNK_SHC_BOOTSTRAP_URL=https://sh1.example.com:8089
-export SPLUNK_TOKEN=<token>              # preferred
-# or basic auth instead:
-# export SPLUNK_USERNAME=mcp-readonly
-# export SPLUNK_PASSWORD=...
+# Cluster-wide: HTTP basic auth with a shared least-privilege role
+export SPLUNK_USERNAME=mcp-readonly
+export SPLUNK_PASSWORD=...
+# Single-instance / SHC-only alternative: bearer token
+# export SPLUNK_TOKEN=<token>
 export SPLUNK_VERIFY_SSL=true            # default; set false for lab self-signed certs
 ```
 
@@ -132,8 +133,8 @@ cp .env.example .env
 ```
 cluster_connect(
   bootstrap_url="https://cm.example.com:8089",
-  token="<your-token>",                  # preferred
-  # or username="mcp-readonly", password="...",
+  username="mcp-readonly", password="...",  # cluster-wide
+  # or token="<your-token>",                # single-instance / SHC only
   shc_url="https://sh1.example.com:8089",   # optional
   verify_ssl=true                           # default
 )
