@@ -214,6 +214,12 @@ The two are complementary, not competing. A future version may **compose** the o
 
 MIT.
 
+## Trademark notice
+
+Splunk® is a registered trademark of Splunk LLC. This project is an independent, community-built integration that talks to Splunk's public REST API. It is **not affiliated with, endorsed by, or sponsored by Splunk LLC**. The Splunk name and any references to Splunk products are used here in their nominative sense to describe interoperability.
+
 ## Acknowledgements
 
-Splunk icons in diagram references from [GimAndTonic/Splunk-Icon-Library](https://github.com/GimAndTonic/Splunk-Icon-Library) (community).
+- Splunk's [public REST API](https://docs.splunk.com/Documentation/Splunk/latest/RESTREF/RESTprolog) — the entire surface this gateway exposes.
+- [FastMCP](https://github.com/jlowin/fastmcp) — the Python framework for MCP server development.
+- The [Model Context Protocol](https://modelcontextprotocol.io) spec by Anthropic and contributors.
