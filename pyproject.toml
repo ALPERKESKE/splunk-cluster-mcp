@@ -1,9 +1,19 @@
 [project]
 name = "splunk-cluster-mcp"
 version = "0.1.0"
-description = "Add your description here"
+description = "Cluster-aware Model Context Protocol gateway for distributed Splunk: routes Claude tool calls to the right node (cluster manager, SHC captain, license manager, indexers)."
 readme = "README.md"
 requires-python = ">=3.11"
+license = "MIT"
+authors = [{ name = "Alper Keske" }]
+keywords = ["mcp", "splunk", "cluster", "claude", "model-context-protocol", "siem", "soc"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: System :: Monitoring",
+]
 dependencies = [
     "fastmcp>=3.3.1",
     "httpx>=0.28.1",
@@ -12,8 +22,13 @@ dependencies = [
     "structlog>=25.5.0",
 ]
 
+[project.urls]
+Homepage = "https://github.com/ALPERKESKE/splunk-cluster-mcp"
+Repository = "https://github.com/ALPERKESKE/splunk-cluster-mcp"
+Issues = "https://github.com/ALPERKESKE/splunk-cluster-mcp/issues"
+
 [project.scripts]
-splunk-cluster-mcp = "splunk_cluster_mcp:main"
+splunk-cluster-mcp = "splunk_cluster_mcp.server:main"
 
 [build-system]
 requires = ["uv_build>=0.11.8,<0.12.0"]
