@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "splunk-cluster": {
+      "type": "stdio",
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/ABSOLUTE/PATH/TO/splunk-cluster-mcp",
+        "run",
+        "python",
+        "-m",
+        "splunk_cluster_mcp.server"
+      ]
+    }
+  }
+}
