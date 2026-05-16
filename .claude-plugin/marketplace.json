@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "splunk-cluster-mcp",
-      "description": "Federation gateway for distributed Splunk: cluster manager + SHC + license manager + indexers under one MCP endpoint. 11 read tools that auto-route to the right node.",
+      "description": "Federation gateway for distributed Splunk: cluster manager + SHC + license manager + indexers under one MCP endpoint. 12 read tools that auto-route to the right node.",
       "version": "0.1.0",
       "source": "./",
       "homepage": "https://github.com/ALPERKESKE/splunk-cluster-mcp",

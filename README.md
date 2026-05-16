@@ -68,6 +68,7 @@ Or add to `.mcp.json` manually:
 | `node_disk` | All nodes (fan-out) | partition usage per node, hottest partition |
 | `tail_log` | Any node (SSH) | tail splunkd, license_usage, metrics, … |
 | `license_status` | License Manager | stacks, pools, violations |
+| `list_users` | Cluster Manager | users + roles (with capabilities if detailed=true) |
 | `search` | SHC Captain (dynamic) | SPL via async job, cluster-wide |
 
 ---
@@ -119,6 +120,7 @@ Once connected, try:
 - _“Per-node disk usage. Which partition is hottest?”_ → `node_disk`
 - _“Run SPL: index=_internal sourcetype=splunkd ERROR \| stats count by component.”_ → `search`
 - _“Show me the last 10 license violation messages.”_ → `license_status`
+- _“List users and their roles. Include capabilities and allowed indexes.”_ → `list_users(detailed=true)`
 
 ---
 

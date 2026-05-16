@@ -29,6 +29,7 @@ from .tools import license as license_tools
 from .tools import logs as logs_tools
 from .tools import search as search_tools
 from .tools import shc as shc_tools
+from .tools import users as users_tools
 
 
 def _setup_logging(level: str = "INFO") -> None:
@@ -250,6 +251,21 @@ def build_app() -> FastMCP:
     ) -> dict:
         try:
             return await logs_tools.tail_log(gw, node=node, log_name=log_name, lines=lines, grep=grep)
+        except NotConnectedError as e:
+            return _err(e)
+
+    @mcp.tool(
+        name="list_users",
+        description=(
+            "List Splunk users with their roles, email, last login, and lockout status. "
+            "Set detailed=true to also return the role catalog (capabilities, allowed indexes, "
+            "search filter, search/disk quotas). Routes to the cluster manager — auth config "
+            "is consistent across the cluster. Requires cluster_connect."
+        ),
+    )
+    async def list_users(detailed: bool = False) -> dict:
+        try:
+            return await users_tools.list_users(gw, detailed=detailed)
         except NotConnectedError as e:
             return _err(e)
 
