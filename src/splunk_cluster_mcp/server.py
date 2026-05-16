@@ -65,25 +65,29 @@ def build_app() -> FastMCP:
     @mcp.tool(
         name="cluster_connect",
         description=(
-            "Establish a connection to a Splunk cluster. Validates the URL+credentials "
-            "by calling /services/server/info, then auto-discovers cluster topology "
-            "(indexer peers, search head cluster members, license manager URL). "
-            "Required: bootstrap_url (Cluster Manager URL like https://cm.example.com:8089), "
-            "username, password. Optional: shc_url (any SHC member URL, used to find SHC "
-            "captain), verify_ssl (default false for lab self-signed certs). "
-            "Credentials are kept in memory only — they are NOT written to disk."
+            "Establish a connection to a Splunk cluster. Validates credentials by calling "
+            "/services/server/info, then auto-discovers cluster topology (indexer peers, "
+            "SHC members, license manager URL). "
+            "Required: bootstrap_url (Cluster Manager URL, e.g. https://cm.example.com:8089) "
+            "AND either token (recommended — create one in Splunk Web: Settings → Tokens) "
+            "OR both username + password. "
+            "Optional: shc_url (any SHC member URL, used to find SHC captain), "
+            "verify_ssl (default true; set false only for lab self-signed certs). "
+            "Credentials live in memory only — never written to disk."
         ),
     )
     async def cluster_connect(
         bootstrap_url: str,
-        username: str,
-        password: str,
+        token: Optional[str] = None,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
         shc_url: Optional[str] = None,
-        verify_ssl: bool = False,
+        verify_ssl: bool = True,
     ) -> dict:
         try:
             return await connect_tools.cluster_connect(
-                gw, bootstrap_url=bootstrap_url, username=username, password=password,
+                gw, bootstrap_url=bootstrap_url,
+                token=token, username=username, password=password,
                 shc_url=shc_url, verify_ssl=verify_ssl,
             )
         except Exception as e:

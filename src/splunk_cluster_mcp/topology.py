@@ -157,8 +157,12 @@ class TopologyDiscoverer:
             return [], None
         try:
             async with SplunkClient(
-                self.cfg.shc_bootstrap_url, self.cfg.username, self.cfg.password,
-                verify_ssl=self.cfg.verify_ssl, timeout=10.0,
+                self.cfg.shc_bootstrap_url,
+                token=self.cfg.token,
+                username=self.cfg.username,
+                password=self.cfg.password,
+                verify_ssl=self.cfg.verify_ssl,
+                timeout=10.0,
             ) as sh:
                 members_resp = await sh.get("/services/shcluster/member/members", params={"count": 0})
                 members: list[Node] = []
@@ -193,7 +197,10 @@ class TopologyDiscoverer:
 
     async def _discover(self) -> Topology:
         async with SplunkClient(
-            self.cfg.bootstrap_url, self.cfg.username, self.cfg.password,
+            self.cfg.bootstrap_url,
+            token=self.cfg.token,
+            username=self.cfg.username,
+            password=self.cfg.password,
             verify_ssl=self.cfg.verify_ssl,
         ) as cm:
             cluster_manager, indexers, lm_node = await self._discover_indexers(cm)

@@ -90,14 +90,21 @@ Or add to `.mcp.json` manually:
 
 ## Credentials — three options
 
+**Auth modes:** Bearer token is preferred. Create a token in Splunk via
+Settings → Tokens → New Token (or `POST /services/authorization/tokens`).
+HTTP basic auth (username + password) is the fallback. **Use a least-privilege
+role for the token / user — not full admin.** See [`SECURITY.md`](./SECURITY.md).
+
 **1. Environment variables** (good for CI / headless):
 
 ```bash
 export SPLUNK_BOOTSTRAP_URL=https://cm.example.com:8089
 export SPLUNK_SHC_BOOTSTRAP_URL=https://sh1.example.com:8089
-export SPLUNK_USERNAME=admin
-export SPLUNK_PASSWORD=changeme
-export SPLUNK_VERIFY_SSL=false   # lab self-signed certs
+export SPLUNK_TOKEN=<token>              # preferred
+# or basic auth instead:
+# export SPLUNK_USERNAME=mcp-readonly
+# export SPLUNK_PASSWORD=...
+export SPLUNK_VERIFY_SSL=true            # default; set false for lab self-signed certs
 ```
 
 **2. `.env` file** in the project root (good for dev clones):
@@ -112,10 +119,10 @@ cp .env.example .env
 ```
 cluster_connect(
   bootstrap_url="https://cm.example.com:8089",
-  username="admin",
-  password="…",
+  token="<your-token>",                  # preferred
+  # or username="mcp-readonly", password="...",
   shc_url="https://sh1.example.com:8089",   # optional
-  verify_ssl=false                          # optional
+  verify_ssl=true                           # default
 )
 ```
 
@@ -197,11 +204,20 @@ The two are complementary, not competing. A future version may **compose** the o
 - 12-node Proxmox cluster (cm1, 3× idx, 3× sh + SHC, dep1, lm1, ds1, hf1, mc1)
 - Claude Code
 
+## Security
+
+See [`SECURITY.md`](./SECURITY.md) for the full security model. Quick highlights:
+
+- **Use a token, not a password.** Splunk Settings → Tokens → New Token.
+- **Use a least-privilege role.** `admin` lets Claude run `| delete` if steered to.
+- **Keep `verify_ssl=true`** (the default). `false` is for trusted lab networks only.
+- **Credentials are in-memory only** — `cluster_connect` never writes them to disk.
+- **Tool outputs flow to Anthropic's API** via Claude — review what your indexes contain.
+
 ## Limitations
 
-- Phase 1 uses HTTP basic auth (shared admin). Per-role tokens are Phase 2.
+- Phase 1 uses a single auth context across the cluster. Per-role split is Phase 2.
 - No persistent topology cache between MCP sessions — re-discovers on each start.
-- `verify_ssl=false` is default for lab convenience. Set `true` in prod.
 
 ## Roadmap
 
