@@ -1,0 +1,51 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "splunk-cluster-mcp",
+  "description": "Cluster-aware MCP gateway for distributed Splunk deployments. Routes Claude tool calls to the right node — Cluster Manager, SHC captain (dynamic), License Manager, or any peer.",
+  "version": "0.1.0",
+  "owner": {
+    "name": "Alper Keske",
+    "url": "https://github.com/ALPERKESKE"
+  },
+  "plugins": [
+    {
+      "name": "splunk-cluster-mcp",
+      "description": "Federation gateway for distributed Splunk: cluster manager + SHC + license manager + indexers under one MCP endpoint. 14 tools (11 read, 3 scenario triggers).",
+      "version": "0.1.0",
+      "source": "./",
+      "homepage": "https://github.com/ALPERKESKE/splunk-cluster-mcp",
+      "repository": "https://github.com/ALPERKESKE/splunk-cluster-mcp",
+      "license": "MIT",
+      "category": "monitoring",
+      "keywords": [
+        "mcp",
+        "splunk",
+        "cluster",
+        "siem",
+        "soc",
+        "observability",
+        "search-head-cluster",
+        "indexer-cluster"
+      ],
+      "tags": ["splunk", "mcp", "cluster", "siem"],
+      "author": {
+        "name": "Alper Keske",
+        "url": "https://github.com/ALPERKESKE"
+      },
+      "strict": false,
+      "mcpServers": {
+        "splunk-cluster": {
+          "command": "uv",
+          "args": [
+            "--directory",
+            "${CLAUDE_PLUGIN_ROOT}",
+            "run",
+            "python",
+            "-m",
+            "splunk_cluster_mcp.server"
+          ]
+        }
+      }
+    }
+  ]
+}
