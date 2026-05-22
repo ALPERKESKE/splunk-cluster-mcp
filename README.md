@@ -1,6 +1,6 @@
 # splunk-cluster-mcp
 
-> A small MCP that makes Claude a bit easier to use against a distributed Splunk cluster. Point it at the cluster manager and it discovers the rest — indexer peers, search head cluster captain, license manager — then routes each tool to the right node.
+>  A small MCP that makes Claude a bit easier to use against a distributed Splunk cluster.
 
 **Built because**: Splunk's official MCP is single-instance. In a multi-node cluster, some things live on the cluster manager, some on a search head, some on the license manager. I wanted Claude to figure that out instead of me telling it for every call.
 
